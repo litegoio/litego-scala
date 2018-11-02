@@ -25,7 +25,7 @@ Now you should be able to refer to it in your application.
 That's in sbt:
 ```sbtshell
 libraryDependencies ++= Seq(
-  "io.litego" %% "litego-scala" % "0.1"
+  "io.litego" %% "litego-scala" % "0.2"
 ) 
 ```
 ### Add dependency on github repository
