@@ -3,17 +3,21 @@ package io.litego.api.v1
 import java.time.Instant
 import java.util.UUID
 
+import akka.Done
 import akka.http.scaladsl.HttpExt
+import akka.http.scaladsl.model.ws.{TextMessage, WebSocketUpgradeResponse}
 import akka.stream.Materializer
+import akka.stream.scaladsl.{Sink, Source}
 import com.typesafe.scalalogging.LazyLogging
 import io.circe._
+import io.circe.parser.decode
 import io.circe.syntax._
 import io.litego.api.Params._
 import io.litego.api.v1.defaults._
 import io.litego.api.{AuthToken, Endpoint, Params}
 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.Try
+import scala.util.{Either, Try}
 
 object Charges extends LazyLogging {
 
@@ -93,6 +97,26 @@ object Charges extends LazyLogging {
 
   case class GetChargeRequest(id: Option[UUID] = None)
 
+  case class InvoiceSettled(
+    invoiceId: UUID,
+    merchantId: UUID,
+    amountPaidSatoshi: Long,
+    settledAt: Instant
+  )
+
+  object InvoiceSettled {
+    implicit val eventDecoder: Decoder[InvoiceSettled] = Decoder.forProduct4(
+      "invoice_id",
+      "merchant_id",
+      "amount_paid_satoshi",
+      "settled_at"
+    )(InvoiceSettled.apply)
+
+    def decodeWsMsg(json: String): Either[Error, InvoiceSettled] = {
+      decode[InvoiceSettled](json)
+    }
+  }
+
   def create(request: CreateChargeRequest)(
       implicit authToken: AuthToken,
       endpoint: Endpoint,
@@ -137,6 +161,36 @@ object Charges extends LazyLogging {
     implicit val token: Some[AuthToken] = Some(authToken)
 
     createRequestGET[Charge](finalUrl, Map.empty, logger)
+  }
+
+  def subscribePayments(incoming: Sink[InvoiceSettled, Future[Done]])(
+    implicit authToken: AuthToken,
+    endpoint: Endpoint,
+    client: HttpExt,
+    materializer: Materializer
+  ): (Future[WebSocketUpgradeResponse], Future[Done]) = {
+    val outgoing = Source.repeat(TextMessage(""))
+
+    val finalUrl = s"${endpoint.url.replaceAll("http", "ws")}/v1/payments/subscribe"
+
+    implicit val token: Some[AuthToken] = Some(authToken)
+
+    createWebsocketRequest[InvoiceSettled](finalUrl, outgoing, incoming, logger)
+  }
+
+  def subscribePayment(chargeId: UUID, incoming: Sink[InvoiceSettled, Future[Done]])(
+    implicit authToken: AuthToken,
+    endpoint: Endpoint,
+    client: HttpExt,
+    materializer: Materializer
+  ): (Future[WebSocketUpgradeResponse], Future[Done]) = {
+    val outgoing = Source.repeat(TextMessage(""))
+
+    val finalUrl = s"${endpoint.url.replaceAll("http", "ws")}/v1/payments/subscribe/${chargeId.toString}"
+
+    implicit val token: Some[AuthToken] = Some(authToken)
+
+    createWebsocketRequest[InvoiceSettled](finalUrl, outgoing, incoming, logger)
   }
 
 }

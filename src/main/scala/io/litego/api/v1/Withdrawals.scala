@@ -76,6 +76,19 @@ object Withdrawals extends LazyLogging {
     )(WithdrawalsList.apply)
   }
 
+  case class WithdrawalSettings(
+    withdrawalFee: Double,
+    withdrawalManualFee: Long,
+    withdrawalMinAmount: Long
+  )
+
+  object WithdrawalSettings {
+    implicit val withdrawalsListDecoder: Decoder[WithdrawalSettings] = Decoder.forProduct3(
+      "withdrawal_fee",
+      "withdrawal_manual_fee",
+      "withdrawal_min_amount"
+    )(WithdrawalSettings.apply)
+  }
 
   case class SetWithdrawalAddressRequest(`type`: String = "", value: String = "")
 
@@ -147,6 +160,21 @@ object Withdrawals extends LazyLogging {
     implicit val token: Some[AuthToken] = Some(authToken)
 
     createRequestGET[WithdrawalsList](finalUrl, queryParameters, logger)
+  }
+
+  def withdrawalSettings()(
+    implicit authToken: AuthToken,
+    endpoint: Endpoint,
+    client: HttpExt,
+    materializer: Materializer,
+    executionContext: ExecutionContext
+  ): Future[Try[WithdrawalSettings]] = {
+
+    val finalUrl = s"${endpoint.url}/v1/merchant/withdrawal/settings"
+
+    implicit val token: Some[AuthToken] = Some(authToken)
+
+    createRequestGET[WithdrawalSettings](finalUrl, Map.empty, logger)
   }
 
 }

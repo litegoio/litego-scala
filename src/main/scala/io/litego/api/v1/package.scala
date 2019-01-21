@@ -6,11 +6,15 @@ import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
+import akka.http.scaladsl.model.ws.{TextMessage, WebSocketRequest, WebSocketUpgradeResponse}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
+import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.{Done, NotUsed}
 import com.typesafe.scalalogging.Logger
 import de.knutwalker.akka.http.support.CirceHttpSupport._
 import de.knutwalker.akka.stream.support.CirceStreamSupport
+import io.circe.parser._
 import io.circe.syntax._
 import io.circe.{Errors => _, _}
 import io.litego.api.v1.Errors.{ErrorResponse, ServerError, UnhandledServerError}
@@ -109,6 +113,54 @@ package object v1 {
       }
 
     } yield result
+  }
+
+  /**
+    * A helper function which creates websocket request through akka-http
+    *
+    * @param finalUrl The URL for the request
+    * @param outgoing The outgoing source to send over a websocket
+    * @param incoming The incoming sink to receive messages from websocket
+    * @param logger   The logger to use, should the logger for the model for
+    *                 easy debugging
+    * @tparam M The model which this request should return
+    * @return tuple of (upgradeResponse, closed)
+    *         upgradeResponse is a Future[WebSocketUpgradeResponse] that
+    *         completes or fails when the connection succeeds or fails
+    *         and closed is a Future[Done] representing the stream completion from above
+    */
+  def createWebsocketRequest[M](
+    finalUrl: String,
+    outgoing: Source[TextMessage.Strict, NotUsed],
+    incoming: Sink[M, Future[Done]],
+    logger: Logger
+  )(implicit client: HttpExt,
+    materializer: Materializer,
+    token: Option[Token] = None,
+    decoder: Decoder[M]): (Future[WebSocketUpgradeResponse], Future[Done]) = {
+
+    val webSocketFlow = client.webSocketClientFlow(WebSocketRequest(finalUrl, buildHeaders(token)))
+
+    def parseMessage(message: String): M =
+      parse(message)
+        .flatMap(_.as[M])
+        .fold(
+          err => {
+            logger.error(s"Parsing message error $err")
+            throw err
+          },
+          identity
+        )
+
+    outgoing
+      .viaMat(webSocketFlow)(Keep.right)
+      .collect {
+        case TextMessage.Strict(message) =>
+          logger.debug(s"Received websocket message $message")
+          parseMessage(message)
+      }
+      .toMat(incoming)(Keep.both)
+      .run()
   }
 
   /**

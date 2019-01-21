@@ -93,6 +93,28 @@ object Merchants extends LazyLogging {
     )(NotificationResponsesList.apply)
   }
 
+  case class ReferralPaymentResponse(amountMsat: Long, paidAt: Instant, `object`: String)
+
+  object ReferralPaymentResponse {
+    implicit val referralPaymentResponseDecoder: Decoder[ReferralPaymentResponse] = Decoder.forProduct3(
+      "amount_msat",
+      "paid_at",
+      "object"
+    )(ReferralPaymentResponse.apply)
+  }
+
+  case class ReferralPaymentsList(data: Seq[ReferralPaymentResponse], page: Int, pageSize: Int, count: Int, `object`: String)
+
+  object ReferralPaymentsList {
+    implicit val notificationResponsesListDecoder: Decoder[ReferralPaymentsList] = Decoder.forProduct5(
+      "data",
+      "page",
+      "page_size",
+      "count",
+      "object"
+    )(ReferralPaymentsList.apply)
+  }
+
   case class AuthenticateRequest(merchantId: Option[UUID] = None, secretKey: String = "")
 
   object AuthenticateRequest {
@@ -180,6 +202,21 @@ object Merchants extends LazyLogging {
     implicit val token: Some[AuthToken] = Some(authToken)
 
     createRequestGET[NotificationResponsesList](finalUrl, Map.empty, logger)
+  }
+
+  def referralPaymentsList()(
+    implicit authToken: AuthToken,
+    endpoint: Endpoint,
+    client: HttpExt,
+    materializer: Materializer,
+    executionContext: ExecutionContext
+  ): Future[Try[ReferralPaymentsList]] = {
+
+    val finalUrl = s"${endpoint.url}/v1/merchant/me/referral-payments"
+
+    implicit val token: Some[AuthToken] = Some(authToken)
+
+    createRequestGET[ReferralPaymentsList](finalUrl, Map.empty, logger)
   }
 
 }

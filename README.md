@@ -25,7 +25,7 @@ Now you should be able to refer to it in your application.
 That's in sbt:
 ```sbtshell
 libraryDependencies ++= Seq(
-  "io.litego" %% "litego-scala" % "0.2"
+  "io.litego" %% "litego-scala" % "0.1"
 ) 
 ```
 ### Add dependency on github repository
@@ -122,6 +122,10 @@ val setAddressResponse: Future[Withdrawals.WithdrawalAddress] = handle(
       Withdrawals.setWithdrawalAddress(Withdrawals.SetWithdrawalAddressRequest(`type` = Withdrawals.REGULAR_ADDRESS_TYPE, value = "some_address"))
     )
 ```
+- Get withdrawal settings
+```scala
+val withdrawalSettings: Future[Withdrawals.WithdrawalSettings] = handle(Withdrawals.withdrawalSettings())
+```
 - Request manual withdrawal
 ```scala
 val withdrawalResponse: Future[Withdrawals.WithdrawalTransaction] = handle(Withdrawals.manualWithdrawal())
@@ -137,4 +141,48 @@ val setWebhookResponse: Future[Merchants.NotificationUrl] = handle(Merchants.set
 - List responses from webhook
 ```scala
 val webhookResponsesList: Future[Merchants.NotificationResponsesList] = handle(Merchants.notificationResponsesList())
+```
+- List referral payments
+```scala
+val referralPaymentsList: Future[Merchants.ReferralPaymentsList] = handle(Merchants.referralPaymentsList())
+```
+- Subscribe for payments
+```scala
+val incoming: Sink[Charges.InvoiceSettled, Future[Done]] =
+    Sink.foreach { message =>
+      logger.debug(message.toString)
+    }
+
+  val (upgradeResponse, closed) = Charges.subscribePayments(incoming)
+
+  val connected = upgradeResponse.map { upgrade =>
+    if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
+      Done
+    } else {
+      throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
+    }
+  }
+
+  connected.onComplete(c => logger.debug(c.toString))
+  closed.foreach(_ => logger.debug("closed"))
+```
+- Subscribe for payment of single charge
+```scala
+val incoming: Sink[Charges.InvoiceSettled, Future[Done]] =
+    Sink.foreach { message =>
+      logger.debug(message.toString)
+    }
+
+  val (upgradeResponse, closed) = Charges.subscribePayment(charge_id, incoming)
+
+  val connected = upgradeResponse.map { upgrade =>
+    if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
+      Done
+    } else {
+      throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
+    }
+  }
+
+  connected.onComplete(c => logger.debug(c.toString))
+  closed.foreach(_ => logger.debug("closed"))
 ```
