@@ -6,10 +6,10 @@ import akka.http.scaladsl.HttpExt
 import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
-import akka.http.scaladsl.model.ws.{TextMessage, WebSocketRequest, WebSocketUpgradeResponse}
+import akka.http.scaladsl.model.ws.{PeerClosedConnectionException, TextMessage, WebSocketRequest}
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
 import akka.{Done, NotUsed}
 import com.typesafe.scalalogging.Logger
 import de.knutwalker.akka.http.support.CirceHttpSupport._
@@ -119,8 +119,7 @@ package object v1 {
     * A helper function which creates websocket request through akka-http
     *
     * @param finalUrl The URL for the request
-    * @param outgoing The outgoing source to send over a websocket
-    * @param incoming The incoming sink to receive messages from websocket
+    * @param incoming The incoming flow to receive messages from websocket
     * @param logger   The logger to use, should the logger for the model for
     *                 easy debugging
     * @tparam M The model which this request should return
@@ -131,13 +130,14 @@ package object v1 {
     */
   def createWebsocketRequest[M](
     finalUrl: String,
-    outgoing: Source[TextMessage.Strict, NotUsed],
-    incoming: Sink[M, Future[Done]],
+    incoming: Flow[M, Done, NotUsed],
+    sink: Sink[Done, Future[Done]],
     logger: Logger
   )(implicit client: HttpExt,
-    materializer: Materializer,
+    mat: Materializer,
     token: Option[Token] = None,
-    decoder: Decoder[M]): (Future[WebSocketUpgradeResponse], Future[Done]) = {
+    decoder: Decoder[M],
+    ec: ExecutionContext): Future[Done] = {
 
     val webSocketFlow = client.webSocketClientFlow(WebSocketRequest(finalUrl, buildHeaders(token)))
 
@@ -152,15 +152,44 @@ package object v1 {
           identity
         )
 
-    outgoing
+    val (upgradeResponse, closed) = Source.repeat(TextMessage(""))
       .viaMat(webSocketFlow)(Keep.right)
       .collect {
         case TextMessage.Strict(message) =>
           logger.debug(s"Received websocket message $message")
           parseMessage(message)
       }
-      .toMat(incoming)(Keep.both)
+      .viaMat(incoming)(Keep.left)
+      .toMat(sink)(Keep.both)
       .run()
+
+    val connected = upgradeResponse.map { upgrade =>
+      if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
+        Done
+      } else {
+        throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
+      }
+    }
+
+    connected.onComplete {
+      case Success(c) =>
+        logger.debug(s"Connected: $c")
+      case Failure(e) =>
+        logger.error(s"${e.getMessage}")
+        throw e
+    }
+
+    closed.transformWith {
+      case Success(value) =>
+        logger.debug("Connection closed gracefully")
+        Future.successful(value)
+      case Failure(e: PeerClosedConnectionException) =>
+        logger.error(s"Connection closed with an error: code: ${e.closeCode}, reason: ${e.closeReason}")
+        Future.failed(e)
+      case Failure(e) =>
+        logger.error(s"Connection closed with an error: ${e.getMessage}")
+        Future.failed(e)
+    }
   }
 
   /**

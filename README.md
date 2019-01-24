@@ -146,43 +146,27 @@ val webhookResponsesList: Future[Merchants.NotificationResponsesList] = handle(M
 ```scala
 val referralPaymentsList: Future[Merchants.ReferralPaymentsList] = handle(Merchants.referralPaymentsList())
 ```
+
+### Websocket subscriptions
+
+You can subscribe to topics with payments of all your charges or a single charge by it's ID
+
+The Flow that is passed to this methods must emit exactly one Done element for each element that it receives. It must also emit them in the same order that the elements were received.
+This means that you must not use methods such as filter or collect on the Flow which would drop elements.
+
 - Subscribe for payments
 ```scala
-val incoming: Sink[Charges.InvoiceSettled, Future[Done]] =
-    Sink.foreach { message =>
-      logger.debug(message.toString)
-    }
-
-  val (upgradeResponse, closed) = Charges.subscribePayments(incoming)
-
-  val connected = upgradeResponse.map { upgrade =>
-    if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
-      Done
-    } else {
-      throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
-    }
-  }
-
-  connected.onComplete(c => logger.debug(c.toString))
-  closed.foreach(_ => logger.debug("closed"))
+val subscription: Future[Done] = Charges.subscribePayments(Flow[Charges.InvoiceSettled].map { message =>
+  doSomethingWithTheMessage(message)
+  println(message)
+  Done
+})
 ```
 - Subscribe for payment of single charge
 ```scala
-val incoming: Sink[Charges.InvoiceSettled, Future[Done]] =
-    Sink.foreach { message =>
-      logger.debug(message.toString)
-    }
-
-  val (upgradeResponse, closed) = Charges.subscribePayment(charge_id, incoming)
-
-  val connected = upgradeResponse.map { upgrade =>
-    if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
-      Done
-    } else {
-      throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
-    }
-  }
-
-  connected.onComplete(c => logger.debug(c.toString))
-  closed.foreach(_ => logger.debug("closed"))
+val subscription: Future[Done] = Charges.subscribePayment(UUID.fromString("2f551fc0-1faa-11e9-90e2-df42b3b425c0"), Flow[Charges.InvoiceSettled].map { message =>
+  doSomethingWithTheMessage(message)
+  println(message)
+  Done
+})
 ```
