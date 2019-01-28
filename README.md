@@ -13,26 +13,12 @@ litego-scala was intentionally designed to use bare minimum external dependencie
 
 ## Installation
 
-### Clone and publish locally
-To use litego-scala as a dependency in your project, the easiest way right now is to clone and publish it locally.
-Simply run:
-```bash
-git clone https://github.com/litegoio/litego-scala.git
-cd litego-scala
-sbt publishLocal
-```
-Now you should be able to refer to it in your application.
-That's in sbt:
+Litego-scala available through a Maven repository. 
+Get started by putting this into your build.sbt file.
 ```sbtshell
-libraryDependencies ++= Seq(
-  "io.litego" %% "litego-scala" % "0.2"
-) 
-```
-### Add dependency on github repository
-Alternatively you can add dependency on github repository:
-```sbtshell
-lazy val myProject = (project in file("myProject"))
-  .dependsOn(ProjectRef(uri("https://github.com/litegoio/litego-scala.git#master"), "litego-scala"))
+resolvers += "sonatype releases" at "https://oss.sonatype.org/content/repositories/releases"
+
+libraryDependencies += "io.litego" %% "litego-scala" % "0.2"
 ```
 
 ## Examples

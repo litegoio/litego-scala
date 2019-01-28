@@ -1,33 +1,58 @@
-name := "litego-scala"
-
-version := "0.2"
-
 val currentScalaVersion = "2.12.7"
-
-scalaVersion := currentScalaVersion
-
-organization := "io.litego"
-
-scalacOptions ++= Seq(
-  "-target:jvm-1.8",
-  "-encoding",
-  "UTF-8",
-  "-deprecation", // warning and location for usages of deprecated APIs
-  "-feature", // warning and location for usages of features that should be imported explicitly
-  "-unchecked", // additional warnings where generated code depends on assumptions
-  "-Xlint", // recommended additional warnings
-  "-Xcheckinit", // runtime error when a val is not initialized due to trait hierarchies (instead of NPE somewhere else)
-  "-Ywarn-adapted-args", // Warn if an argument list is modified to match the receiver
-  "-Ywarn-value-discard", // Warn when non-Unit expression results are unused
-  "-Ywarn-inaccessible",
-  "-Ywarn-dead-code",
-  "-language:postfixOps"
-)
 
 val circeVersion   = "0.9.3"
 val akkaStreamJson = "3.5.0"
 
-libraryDependencies ++= Seq(
+lazy val commonSettings = Seq(
+  version := "0.2",
+  organization := "io.litego",
+  name := "litego-scala",
+  licenses := List("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+  scalaVersion := currentScalaVersion,
+  scalacOptions := Seq(
+    "-target:jvm-1.8",
+    "-unchecked",
+    "-deprecation",
+    "-feature",
+    "-encoding", "utf8",
+    "-Xlint",
+    "-Xcheckinit",
+    "-Ywarn-adapted-args",
+    "-Ywarn-value-discard",
+    "-Ywarn-inaccessible",
+    "-Ywarn-dead-code",
+    "-language:postfixOps"
+  ),
+  resolvers ++= Seq(
+    Resolver.sonatypeRepo("releases"),
+    Resolver.sonatypeRepo("snapshots")
+  ),
+
+  // Sonatype publishing
+  publishMavenStyle := true,
+  publishTo := sonatypePublishTo.value,
+  sonatypeProfileName := "io.litego",
+  autoScalaLibrary := false,
+  autoScalaLibrary in test := false,
+  publishArtifact in Test := false,
+  pomIncludeRepository := { _ => false },
+  pomExtra := (
+    <url>https://litego.io</url>
+      <scm>
+        <url>https://github.com/litegoio/litego-scala.git</url>
+        <connection>git@github.com:litegoio/litego-scala.git</connection>
+      </scm>
+      <developers>
+        <developer>
+          <id>litegoio</id>
+          <name>LiteGo.io</name>
+          <url>https://github.com/litegoio</url>
+        </developer>
+      </developers>
+    )
+)
+
+lazy val commonDependencies = Seq(
   "com.typesafe.akka"          %% "akka-http"         % "10.1.5",
   "com.typesafe.akka"          %% "akka-stream"       % "2.5.17",
   "de.knutwalker"              %% "akka-stream-circe" % akkaStreamJson,
@@ -35,7 +60,15 @@ libraryDependencies ++= Seq(
   "io.circe"                   %% "circe-core"        % circeVersion,
   "io.circe"                   %% "circe-generic"     % circeVersion,
   "io.circe"                   %% "circe-parser"      % circeVersion,
-  "com.typesafe.scala-logging" %% "scala-logging"     % "3.9.0",
+  "com.typesafe.scala-logging" %% "scala-logging"     % "3.9.0"
+)
+
+lazy val testDependencies = Seq(
   "org.scalatest"              %% "scalatest"         % "3.0.5" % "test",
   "ch.qos.logback"             % "logback-classic"    % "1.2.3" % "test"
 )
+
+lazy val litegoScala = project.in(file("."))
+  .settings(commonSettings: _*)
+  .settings(libraryDependencies ++= commonDependencies)
+  .settings(libraryDependencies ++= testDependencies)
