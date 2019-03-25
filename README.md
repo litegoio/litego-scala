@@ -116,6 +116,10 @@ val withdrawalSettings: Future[Withdrawals.WithdrawalSettings] = handle(Withdraw
 ```scala
 val withdrawalResponse: Future[Withdrawals.WithdrawalTransaction] = handle(Withdrawals.manualWithdrawal())
 ```
+- Request withdrawal to lightning invoice
+```scala
+val withdrawalResponse: Future[Withdrawals.WithdrawalTransaction] = handle(Withdrawals.lightningInvoiceWithdrawal(LightningWithdrawalRequest("lightning_payment_request", Some(1000L))))
+```
 - Withdrawals list
 ```scala
 val withdrawalsListResponse: Future[Withdrawals.WithdrawalsList] = handle(Withdrawals.withdrawalsList(Withdrawals.WithdrawalsListRequest()))
