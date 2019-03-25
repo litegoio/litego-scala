@@ -256,15 +256,6 @@ object Wallet {
     )(EosBalance.apply)
   }
 
-  // WS
-  //  {
-  //    "id":"fe8ee7a1-f5b7-3d5e-b30c-8a986bf5f33d",
-  //    "merchant_id":"0314d53e-d149-4988-80a2-8f3299399224",
-  //    "txid":"90ad9d5ff60839c71a8cea927f2019fdeb7c96b5fd9983f0c4c610cf3a07c008",
-  //    "amount_sat":30000,
-  //    "received_at":"2019-03-25T08:37:40.135Z"
-  //  }
-
   case class BtcTransferReceived(
     id: UUID,
     merchantId: UUID,
@@ -286,16 +277,6 @@ object Wallet {
       decode[BtcTransferReceived](json)
     }
   }
-
-  //WS
-  //  {
-  //    "id":"f0f6c638-318a-3ce6-9492-78b8dcb08090",
-  //    "merchant_id":"0314d53e-d149-4988-80a2-8f3299399224",
-  //    "txid":"b2e2b78dffe7239c885df9038bdb9dbfffa24d0663b393a804264341f9240ce0",
-  //    "amount_eos":0.0001,
-  //    "memo":"0314d53e-d149-4988-80a2-8f3299399224*from...",
-  //    "received_at":"2019-03-25T08:41:25.554Z"
-  //  }
 
   case class EosTransferReceived(
     id: UUID,

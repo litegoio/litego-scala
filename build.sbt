@@ -4,7 +4,7 @@ val circeVersion   = "0.9.3"
 val akkaStreamJson = "3.5.0"
 
 lazy val commonSettings = Seq(
-  version := "0.2",
+  version := "0.3",
   organization := "io.litego",
   name := "litego-scala",
   licenses := List("Apache 2" -> new URL("http://www.apache.org/licenses/LICENSE-2.0.txt")),

@@ -5,29 +5,50 @@ import io.circe.{Decoder, Encoder}
 
 object Errors {
 
-  case class ErrorResponse(code: Int, `type`: Option[String] = None, message: Option[String] = None) extends Exception{
-    override def toString: String   = s"""Error($code, ${`type`}, $message)"""
+  case class ApiError(name: Option[String], detail: Option[String])
+
+  object ApiError {
+    implicit val apiErrorDecoder: Decoder[ApiError] = Decoder.forProduct2(
+      "name",
+      "detail"
+    )(ApiError.apply)
+  }
+
+  case class ErrorResponse(code: Int,
+                           `type`: Option[String] = None,
+                           message: Option[String] = None,
+                           name: Option[String] = None,
+                           detail: Option[String] = None
+                          ) extends Exception {
+    override def toString: String = s"""Error($code, ${`type`}, $message, $name, $detail)"""
+
     override def getMessage: String = toString
   }
 
   object ErrorResponse {
-    implicit val responseErrorDecoder: Decoder[ErrorResponse] = Decoder.forProduct3(
+    implicit val responseErrorDecoder: Decoder[ErrorResponse] = Decoder.forProduct5(
       "code",
       "type",
-      "message"
+      "message",
+      "name",
+      "detail"
     )(ErrorResponse.apply)
 
-    implicit val responseErrorEncoder: Encoder[ErrorResponse] = Encoder.forProduct3(
+    implicit val responseErrorEncoder: Encoder[ErrorResponse] = Encoder.forProduct5(
       "code",
       "type",
-      "message"
+      "message",
+      "name",
+      "detail"
     )(
       x =>
         (
           x.code,
           x.`type`,
-          x.message
-      )
+          x.message,
+          x.name,
+          x.detail
+        )
     )
   }
 

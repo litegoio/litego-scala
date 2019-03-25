@@ -17,7 +17,7 @@ import de.knutwalker.akka.stream.support.CirceStreamSupport
 import io.circe.parser._
 import io.circe.syntax._
 import io.circe.{Errors => _, _}
-import io.litego.api.v1.Errors.{ErrorResponse, ServerError, UnhandledServerError}
+import io.litego.api.v1.Errors.{ApiError, ErrorResponse, ServerError, UnhandledServerError}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util._
@@ -281,7 +281,7 @@ package object v1 {
     * @param getQueryParameters
     * @param postJsonParameters
     * @return Will return a [[Left]] if we catch one of the handled errors. Will return a [[Right]] if no server errors
-    *         are made. Will throw an [[UnhandledServerError]] or [[ServerError]] for uncaught errors.
+    *         are made. Will throw an [[UnhandledServerError]] for uncaught errors.
     */
   private[v1] def parseServerError[A](
       response: HttpResponse,
@@ -307,17 +307,20 @@ package object v1 {
             }
         } else {
           httpCode match {
-            case 400 | 401 | 402 | 403 | 404 | 429 =>
+            case 400 | 403 | 404 | 406 =>
               for {
                 json <- {
                   Unmarshal(
                     response.entity.httpEntity.withContentType(ContentTypes.`application/json`)
                   ).to[Json]
-                    .map { _ =>
+                    .map { json =>
+                      val apiError: Option[ApiError] = json.as[ApiError].toOption
                       util.Success(
                         ErrorResponse(httpCode,
                                       Some(response.status.reason()),
-                                      Some(response.status.defaultMessage()))
+                                      Some(response.status.defaultMessage()),
+                                      apiError.flatMap(_.name),
+                                      apiError.flatMap(_.detail))
                       )
                     }
                     .recover { case e => util.Failure(e) }
@@ -330,7 +333,7 @@ package object v1 {
                   }
                 }
               }
-            case 500 | 502 | 503 | 504 =>
+            case 500 =>
               response.discardEntityBytes()
               throw ServerError(response)
             case _ =>
