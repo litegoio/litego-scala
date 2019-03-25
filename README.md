@@ -98,6 +98,10 @@ val chargesListResponse: Future[Charges.ChargesList] = handle(Charges.chargesLis
 val getChargeRequest = Charges.GetChargeRequest(Some(UUID.fromString("e7129f40-dc28-11e8-9ede-2d69f348ade2")))
 val getChargeResponse: Future[Charges.Charge] = handle(Charges.getCharge(getChargeRequest))
 ```
+- Validate lightning invoice
+```scala
+val validateResponse: Future[Charges.ValidateLightningInvoiceResponse] = handle(Charges.validateLightningInvoice(ValidateLightningInvoiceRequest("lightning_payment_request", 1000L)))
+```
 - Get information about authenticated merchant
 ```scala
 val getInfoResponse: Future[Merchants.MerchantInfo] = handle(Merchants.getInfo())
