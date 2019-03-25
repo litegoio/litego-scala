@@ -103,6 +103,42 @@ object Charges extends LazyLogging {
     settledAt: Instant
   )
 
+  case class ValidateLightningInvoiceRequest(
+    paymentRequestStr: String,
+    amountSatoshi: Long
+  )
+
+  object ValidateLightningInvoiceRequest {
+    implicit val validateLightningInvoiceRequestEncoder: Encoder[ValidateLightningInvoiceRequest] = Encoder.forProduct2(
+      "payment_request_string",
+      "amount_satoshi"
+    )(
+      x =>
+        (
+          x.paymentRequestStr,
+          x.amountSatoshi
+        )
+    )
+  }
+
+  case class ValidateLightningInvoiceResponse(
+    paymentRequestStr: String,
+    amountSatoshi: Long,
+    memo: String,
+    pathFound: Boolean,
+    expired: Boolean,
+  )
+
+  object ValidateLightningInvoiceResponse {
+    implicit val validateLightningInvoiceDecoder: Decoder[ValidateLightningInvoiceResponse] = Decoder.forProduct5(
+      "payment_request_string",
+      "amount_satoshi",
+      "memo",
+      "path_found",
+      "expired"
+    )(ValidateLightningInvoiceResponse.apply)
+  }
+
   object InvoiceSettled {
     implicit val eventDecoder: Decoder[InvoiceSettled] = Decoder.forProduct4(
       "invoice_id",
@@ -159,6 +195,21 @@ object Charges extends LazyLogging {
     implicit val token: Some[AuthToken] = Some(authToken)
 
     createRequestGET[Charge](finalUrl, Map.empty, logger)
+  }
+
+  def validateLightningInvoice(request: ValidateLightningInvoiceRequest)(
+    implicit authToken: AuthToken,
+    endpoint: Endpoint,
+    client: HttpExt,
+    materializer: Materializer,
+    executionContext: ExecutionContext
+  ): Future[Try[ValidateLightningInvoiceResponse]] = {
+
+    val finalUrl = s"${endpoint.url}/v1/utils/payment_request_status"
+
+    implicit val token: Some[AuthToken] = Some(authToken)
+
+    createRequestPOST[ValidateLightningInvoiceResponse](finalUrl, request.asJson, logger)
   }
 
   def subscribePayments(incoming: Flow[Charges.InvoiceSettled, Done, NotUsed])(
