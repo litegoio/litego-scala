@@ -124,6 +124,10 @@ val withdrawalResponse: Future[Withdrawals.WithdrawalTransaction] = handle(Withd
 ```scala
 val withdrawalResponse: Future[Withdrawals.WithdrawalTransaction] = handle(Withdrawals.lightningInvoiceWithdrawal(LightningWithdrawalRequest("lightning_payment_request", Some(1000L))))
 ```
+- Request withdrawal to lightning channel
+```scala
+val withdrawalResponse: Future[Withdrawals.WithdrawalTransaction] = handle(Withdrawals.lightningChannelWithdrawal(LightningChannelWithdrawalRequest("03b882dcd309adaf4d66d1aadfbc6e85764bd65c6bdaf03689c55f1abd13f53fc5", "nodetestnet.litego.io:9735", Some(100000L))))
+```
 - Withdrawals list
 ```scala
 val withdrawalsListResponse: Future[Withdrawals.WithdrawalsList] = handle(Withdrawals.withdrawalsList(Withdrawals.WithdrawalsListRequest()))

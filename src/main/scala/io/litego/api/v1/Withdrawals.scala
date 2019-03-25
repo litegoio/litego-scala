@@ -123,8 +123,25 @@ object Withdrawals extends LazyLogging {
   case class LightningWithdrawalRequest(paymentRequest: String = "", amountSatoshi: Option[Long] = None)
 
   object LightningWithdrawalRequest {
-    implicit val createChargeRequestEncoder: Encoder[LightningWithdrawalRequest] =
+    implicit val lightningWithdrawalEncoder: Encoder[LightningWithdrawalRequest] =
       Encoder.forProduct2("payment_request", "amount_satoshi")(x => (x.paymentRequest, x.amountSatoshi))
+  }
+
+  case class LightningChannelWithdrawalRequest(publicKey: String = "", host: String = "", amountSat: Option[Long] = None)
+
+  object LightningChannelWithdrawalRequest {
+    implicit val lightningChannelWithdrawalEncoder: Encoder[LightningChannelWithdrawalRequest] =
+      Encoder.forProduct3(
+        "public_key",
+        "host",
+        "amount_sat"
+      )(x =>
+        (
+          x.publicKey,
+          x.host,
+          x.amountSat
+        )
+      )
   }
 
   def setWithdrawalAddress(request: SetWithdrawalAddressRequest)(
@@ -167,6 +184,20 @@ object Withdrawals extends LazyLogging {
     implicit val token: Some[AuthToken] = Some(authToken)
 
     val finalUrl = endpoint.url + "/v1/merchant/me/withdrawal/lightning-invoice"
+
+    createRequestPOST[WithdrawalTransaction](finalUrl, request.asJson, logger)
+  }
+
+  def lightningChannelWithdrawal(request: LightningChannelWithdrawalRequest)(
+    implicit authToken: AuthToken,
+    endpoint: Endpoint,
+    client: HttpExt,
+    materializer: Materializer,
+    executionContext: ExecutionContext
+  ): Future[Try[WithdrawalTransaction]] = {
+    implicit val token: Some[AuthToken] = Some(authToken)
+
+    val finalUrl = endpoint.url + "/v1/merchant/me/withdrawal/lightning-channel"
 
     createRequestPOST[WithdrawalTransaction](finalUrl, request.asJson, logger)
   }
