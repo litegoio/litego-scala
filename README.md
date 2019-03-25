@@ -164,3 +164,75 @@ val subscription: Future[Done] = Charges.subscribePayment(UUID.fromString("2f551
   Done
 })
 ```
+
+### BTC Wallet API
+
+- Generate address
+```scala
+val address: Future[Wallet.BitcoinAddress] = handle(BitcoinWallet.generateAddress())
+```
+- Get balance
+```scala
+val balance: Future[Wallet.BtcBalance] = handle(BitcoinWallet.getBalance())
+```
+- Transfers list
+```scala
+val transfers: Future[Wallet.BtcTransfersList] = handle(BitcoinWallet.getTransfersList(Wallet.TransfersListRequest()))
+```
+- Get transfer
+```scala
+val transfer: Future[Wallet.BtcTransfer] = handle(BitcoinWallet.getTransfer(Wallet.TransferRequest(Some(UUID.fromString("3c789c03-e5fd-3d64-8272-763b7325bd3b")))))
+```
+- Send coins
+```scala
+val sendCoinsResponse: Future[Wallet.SendBtcResponse] = handle(BitcoinWallet.sendCoins(Wallet.SendBtcRequest("mprD9vYaWUje3J16UMHevuwjirQ1aYU4RV", 1000L, Some("Some comment"))))
+```
+- Send many
+```scala
+val sendManyRequest = Wallet.SendManyBtcRequest(
+    Seq(
+      Wallet.SendBtcRequest("mprD9vYaWUje3J16UMHevuwjirQ1aYU4RV", 1000L),
+      Wallet.SendBtcRequest("mwuxu2phV1XnRjzeYaq2A1euTnLYmQj4PX", 1100L),
+      Wallet.SendBtcRequest("mme2c4STSQKpBUzVfNaKipPhaNsaiBKKJ6", 1200L)
+    ),
+    Some("Some comment")
+  )
+  val sendManyResponse: Future[Wallet.SendManyBtcResponse] = handle(BitcoinWallet.sendMany(sendManyRequest))
+```
+- Subscribe for incoming transfers
+```scala
+  val subscription: Future[Done] = BitcoinWallet.subscribeTransfers(Flow[Wallet.BtcTransferReceived].map { message =>
+    println(message)
+    Done
+  })
+```
+
+### EOS Wallet API
+
+- Generate address
+```scala
+val address: Future[Wallet.EosAddress] = handle(EosWallet.generateAddress())
+```
+- Get balance
+```scala
+val balance: Future[Wallet.EosBalance] = handle(EosWallet.getBalance())
+```
+- Transfers list
+```scala
+val transfers: Future[Wallet.EosTransfersList] = handle(EosWallet.getTransfersList(Wallet.TransfersListRequest()))
+```
+- Get transfer
+```scala
+val transfer: Future[Wallet.EosTransfer] = handle(EosWallet.getTransfer(Wallet.TransferRequest(Some(UUID.fromString("8aa76a1c-c43a-382e-b3f0-001382a9fba2")))))
+```
+- Send coins
+```scala
+val sendCoinsResponse: Future[Wallet.SendEosResponse] = handle(EosWallet.sendCoins(Wallet.SendEosRequest("eos_account", 0.0001, Some("Some memo"))))
+```
+- Subscribe for incoming transfers
+```scala
+  val subscription: Future[Done] = EosWallet.subscribeTransfers(Flow[Wallet.EosTransferReceived].map { message =>
+    println(message)
+    Done
+  })
+```
