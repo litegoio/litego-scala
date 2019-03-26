@@ -16,9 +16,7 @@ litego-scala was intentionally designed to use bare minimum external dependencie
 Litego-scala available through a Maven repository. 
 Get started by putting this into your build.sbt file.
 ```sbtshell
-resolvers += "sonatype releases" at "https://oss.sonatype.org/content/repositories/releases"
-
-libraryDependencies += "io.litego" %% "litego-scala" % "0.2"
+libraryDependencies += "io.litego" %% "litego-scala" % "0.3"
 ```
 
 ## Examples
