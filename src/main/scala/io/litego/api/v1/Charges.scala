@@ -79,7 +79,12 @@ object Charges extends LazyLogging {
 
   case class ChargesListRequest(paid: Option[Boolean] = None,
                                 page: Option[Int] = None,
-                                pageSize: Option[Int] = None)
+                                pageSize: Option[Int] = None,
+                                startDate: Option[Long] = None,
+                                endDate: Option[Long] = None,
+                                sortBy: Option[String] = None,
+                                ascending: Option[Boolean] = None,
+                               )
 
   object ChargesListRequest {
     implicit val chargesListRequestParams: Params[ChargesListRequest] =
@@ -88,7 +93,11 @@ object Charges extends LazyLogging {
           Map(
             "paidOnly" -> request.paid.map(_.toString),
             "page"     -> request.page.map(_.toString),
-            "pageSize" -> request.pageSize.map(_.toString)
+            "pageSize" -> request.pageSize.map(_.toString),
+            "startDate"-> request.startDate.map(_.toString),
+            "endDate"-> request.endDate.map(_.toString),
+            "sortBy"-> request.sortBy.map(_.toString),
+            "ascending"-> request.ascending.map(_.toString)
           )
         )
       }

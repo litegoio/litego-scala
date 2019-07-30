@@ -105,7 +105,18 @@ object Withdrawals extends LazyLogging {
 
   case class WithdrawalsListRequest(status: Option[String] = None,
                                     page: Option[Int] = None,
-                                    pageSize: Option[Int] = None)
+                                    pageSize: Option[Int] = None,
+                                    address: Option[String] = None,
+                                    `type`: Option[String] = None,
+                                    startCreatedAt: Option[Long] = None,
+                                    endCreatedAt: Option[Long] = None,
+                                    minAmount: Option[Long] = None,
+                                    maxAmount: Option[Long] = None,
+                                    startChangedAt: Option[Long] = None,
+                                    endChangedAt: Option[Long] = None,
+                                    sortBy: Option[String] = None,
+                                    ascending: Option[Boolean] = None
+                                   )
 
   object WithdrawalsListRequest {
     implicit val withdrawalsListRequestParams: Params[WithdrawalsListRequest] =
@@ -114,7 +125,17 @@ object Withdrawals extends LazyLogging {
           Map(
             "status" -> request.status,
             "page" -> request.page.map(_.toString),
-            "page_size" -> request.pageSize.map(_.toString)
+            "page_size" -> request.pageSize.map(_.toString),
+            "address" -> request.address.map(_.toString),
+            "type" -> request.`type`.map(_.toString),
+            "start_created_at" -> request.startCreatedAt.map(_.toString),
+            "end_created_at" -> request.endCreatedAt.map(_.toString),
+            "min_amount" -> request.minAmount.map(_.toString),
+            "max_amount" -> request.maxAmount.map(_.toString),
+            "start_changed_at" -> request.startChangedAt.map(_.toString),
+            "end_changed_at" -> request.endChangedAt.map(_.toString),
+            "sort_by" -> request.sortBy.map(_.toString),
+            "ascending" -> request.ascending.map(_.toString)
           )
         )
       }

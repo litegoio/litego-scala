@@ -16,7 +16,7 @@ litego-scala was intentionally designed to use bare minimum external dependencie
 Litego-scala available through a Maven repository. 
 Get started by putting this into your build.sbt file.
 ```sbtshell
-libraryDependencies += "io.litego" %% "litego-scala" % "0.3"
+libraryDependencies += "io.litego" %% "litego-scala" % "0.4"
 ```
 
 ## Examples
@@ -88,7 +88,7 @@ val crateChargeResponse: Future[Charges.Charge] = handle(Charges.create(createCh
 ```
 - Charges list 
 ```scala
-val chargesListRequest = Charges.ChargesListRequest(paid = Some(true), page = Some(0), pageSize = Some(10))
+val chargesListRequest = Charges.ChargesListRequest(paid = Some(true), page = Some(0), pageSize = Some(10), startDate = Some(1532864303), endDate = Some(1564400346), sortBy = Some("amount"), ascending = Some(true))
 val chargesListResponse: Future[Charges.ChargesList] = handle(Charges.chargesList(chargesListRequest))
 ```
 - Get charge
