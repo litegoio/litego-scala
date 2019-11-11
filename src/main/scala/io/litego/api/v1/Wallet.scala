@@ -191,18 +191,38 @@ object Wallet {
 
   case class TransferRequest(id: Option[UUID] = None)
 
-  case class TransfersListRequest(
+  case class BtcTransfersListRequest(
     page: Option[Int] = None,
-    pageSize: Option[Int] = None
+    pageSize: Option[Int] = None,
+    status: Option[String] = None,
+    direction: Option[String] = None,
+    minAmount: Option[Long] = None,
+    maxAmount: Option[Long] = None,
+    startCreatedAt: Option[Long] = None,
+    endCreatedAt: Option[Long] = None,
+    startStatusChangedAt: Option[Long] = None,
+    endStatusChangedAt: Option[Long] = None,
+    sortBy: Option[String] = None,
+    ascending: Option[Boolean] = None
   )
 
-  object TransfersListRequest {
-    implicit val transfersListRequestParams: Params[TransfersListRequest] =
-      Params.params[TransfersListRequest] { request =>
+  object BtcTransfersListRequest {
+    implicit val btcTransfersListRequestParams: Params[BtcTransfersListRequest] =
+      Params.params[BtcTransfersListRequest] { request =>
         flatten(
           Map(
-            "page"     -> request.page.map(_.toString),
-            "page_size" -> request.pageSize.map(_.toString)
+            "page" -> request.page.map(_.toString),
+            "page_size" -> request.pageSize.map(_.toString),
+            "status" -> request.status,
+            "direction" -> request.direction,
+            "min_amount" -> request.minAmount.map(_.toString),
+            "max_amount" -> request.maxAmount.map(_.toString),
+            "start_created_at" -> request.startCreatedAt.map(_.toString),
+            "end_created_at" -> request.endCreatedAt.map(_.toString),
+            "start_status_changed_at" -> request.startStatusChangedAt.map(_.toString),
+            "end_status_changed_at" -> request.endStatusChangedAt.map(_.toString),
+            "sort_by" -> request.sortBy,
+            "ascending" -> request.ascending.map(_.toString)
           )
         )
       }
@@ -300,5 +320,42 @@ object Wallet {
     def decodeWsMsg(json: String): Either[Error, EosTransferReceived] = {
       decode[EosTransferReceived](json)
     }
+  }
+
+  case class EosTransfersListRequest(
+    page: Option[Int] = None,
+    pageSize: Option[Int] = None,
+    status: Option[String] = None,
+    direction: Option[String] = None,
+    minAmount: Option[Double] = None,
+    maxAmount: Option[Double] = None,
+    startCreatedAt: Option[Long] = None,
+    endCreatedAt: Option[Long] = None,
+    startStatusChangedAt: Option[Long] = None,
+    endStatusChangedAt: Option[Long] = None,
+    sortBy: Option[String] = None,
+    ascending: Option[Boolean] = None
+  )
+
+  object EosTransfersListRequest {
+    implicit val eosTransfersListRequestParams: Params[EosTransfersListRequest] =
+      Params.params[EosTransfersListRequest] { request =>
+        flatten(
+          Map(
+            "page"     -> request.page.map(_.toString),
+            "page_size" -> request.pageSize.map(_.toString),
+            "status" -> request.status,
+            "direction" -> request.direction,
+            "min_amount" -> request.minAmount.map(_.toString),
+            "max_amount" -> request.maxAmount.map(_.toString),
+            "start_created_at" -> request.startCreatedAt.map(_.toString),
+            "end_created_at" -> request.endCreatedAt.map(_.toString),
+            "start_status_changed_at" -> request.startStatusChangedAt.map(_.toString),
+            "end_status_changed_at" -> request.endStatusChangedAt.map(_.toString),
+            "sort_by" -> request.sortBy,
+            "ascending" -> request.ascending.map(_.toString)
+          )
+        )
+      }
   }
 }

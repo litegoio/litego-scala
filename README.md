@@ -16,7 +16,7 @@ litego-scala was intentionally designed to use bare minimum external dependencie
 Litego-scala available through a Maven repository. 
 Get started by putting this into your build.sbt file.
 ```sbtshell
-libraryDependencies += "io.litego" %% "litego-scala" % "0.4"
+libraryDependencies += "io.litego" %% "litego-scala" % "0.5"
 ```
 
 ## Examples
@@ -179,7 +179,7 @@ val balance: Future[Wallet.BtcBalance] = handle(BitcoinWallet.getBalance())
 ```
 - Transfers list
 ```scala
-val transfers: Future[Wallet.BtcTransfersList] = handle(BitcoinWallet.getTransfersList(Wallet.TransfersListRequest()))
+val transfers: Future[Wallet.BtcTransfersList] = handle(BitcoinWallet.getTransfersList(Wallet.BtcTransfersListRequest()))
 ```
 - Get transfer
 ```scala
@@ -221,7 +221,7 @@ val balance: Future[Wallet.EosBalance] = handle(EosWallet.getBalance())
 ```
 - Transfers list
 ```scala
-val transfers: Future[Wallet.EosTransfersList] = handle(EosWallet.getTransfersList(Wallet.TransfersListRequest()))
+val transfers: Future[Wallet.EosTransfersList] = handle(EosWallet.getTransfersList(Wallet.EosTransfersListRequest()))
 ```
 - Get transfer
 ```scala

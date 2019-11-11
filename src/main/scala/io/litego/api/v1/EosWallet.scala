@@ -59,7 +59,7 @@ object EosWallet extends Wallet {
     createRequestGET[EosTransfer](finalUrl, Map.empty, logger)
   }
 
-  def getTransfersList(request: TransfersListRequest)(
+  def getTransfersList(request: EosTransfersListRequest)(
     implicit authToken: AuthToken,
     endpoint: Endpoint,
     client: HttpExt,

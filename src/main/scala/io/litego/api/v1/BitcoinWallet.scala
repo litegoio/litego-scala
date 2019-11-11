@@ -73,7 +73,7 @@ object BitcoinWallet extends Wallet {
     createRequestGET[BtcTransfer](finalUrl, Map.empty, logger)
   }
 
-  def getTransfersList(request: TransfersListRequest)(
+  def getTransfersList(request: BtcTransfersListRequest)(
     implicit authToken: AuthToken,
     endpoint: Endpoint,
     client: HttpExt,
